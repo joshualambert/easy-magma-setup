@@ -1,6 +1,6 @@
 # Magma Orchestrator + NMS Installer (Ubuntu 22.04 / K3s)
 
-This repository includes a script to deploy the **Magma Orchestrator** and **NMS (Network Management System)** using K3s (lightweight Kubernetes) on a single-node Ubuntu 22.04 LTS server. This setup uses self-signed TLS certificates.
+This repository provides a robust script for deploying **Magma Orchestrator** and **NMS (Network Management System)** on a single-node Ubuntu 22.04 LTS server using K3s (lightweight Kubernetes). The installation uses self-signed certificates and is designed for simplicity and reliability.
 
 ---
 
@@ -9,21 +9,22 @@ This repository includes a script to deploy the **Magma Orchestrator** and **NMS
 ### OS
 - Ubuntu 22.04 LTS (64-bit)
 
-### Hardware (Minimum Recommended for Orchestrator + NMS):
+### Hardware (Minimum Recommended)
 | Component | Minimum |
 |----------|---------|
 | CPU      | 4 vCPUs |
 | RAM      | 8 GB    |
 | Disk     | 50 GB SSD |
-| Network  | Public IP with ports **80** and **443** forwarded if behind NAT |
+| Network  | Public IP with accessible ports for web access |
 
-This script was developed against the **AmericanCloud** webhost. You can check them out at [americancloud.com](https://americancloud.com/).
+This script was developed against the **AmericanCloud** webhost. Check them out at [americancloud.com](https://americancloud.com/).
 
 ---
 
-## 📦 Dependencies (automatically handled in the script)
+## 📦 Dependencies
 
-- K3s (Kubernetes)
+All dependencies are automatically installed by the script:
+- K3s (Lightweight Kubernetes)
 - Helm 3
 - Git
 - OpenSSL
@@ -31,89 +32,113 @@ This script was developed against the **AmericanCloud** webhost. You can check t
 
 ---
 
-## 🌐 Domain Requirements
-You must own and configure a DNS record pointing your domain to the server's public IP.
+## 🌐 Domain Setup
+
+You must own and configure a DNS record pointing to your server's public IP.
 
 Example:
 ```
-YOUREXAMPLEDOMAIN.COM → X.X.X.X
+magma.yourdomain.com → X.X.X.X
 ```
 
 ---
 
 ## 🚀 Installation
 
-1. SSH into your Ubuntu 22.04 server.
-2. Clone this repository or copy the script locally.
+1. SSH into your Ubuntu 22.04 server
+2. Clone this repository or copy the script to your server
 3. Make the script executable:
 
 ```bash
-chmod +x install-magma.sh
+chmod +x install_magma.sh
 ```
 
-4. Run the installation script:
+4. Run the script with your domain and email:
 
 ```bash
-./install-magma.sh yourorchestratorurlhere.com youremailhere@fakeemail.com
+./install_magma.sh yourdomain.com your@email.com
 ```
 
----
+### Additional Options
 
-## 📁 Script Overview
-
-The script performs the following steps:
-
-1. Installs K3s Kubernetes and Helm.
-2. Configures `kubectl` for the current user.
-3. Clones the Magma GitHub repo.
-4. Installs Cert Manager.
-5. Generates a self-signed certificate for the Orchestrator domain.
-6. Creates all required Kubernetes secrets.
-7. Deploys:
-   - Magma Orchestrator
-   - Magma NMS (web interface)
-8. Outputs the status of all pods and services.
-
----
-
-## 📍 After Installation
-
-Check your services:
+The script supports several command-line options:
 
 ```bash
-kubectl get pods -A
-kubectl get svc -A
-```
+# Enable verbose output for detailed logs
+./install_magma.sh yourdomain.com your@email.com --verbose
 
-Access the NMS at:
+# Run troubleshooting checks on an existing installation
+./install_magma.sh troubleshoot
 
+# Clean up a failed installation before trying again
+./install_magma.sh cleanup
 ```
-https://YOUR-PUBLIC-IP-HERE-OR-DOMAIN-HERE
-```
-
-> ⚠️ Your browser may warn about the self-signed certificate. You can proceed past the warning or configure a trusted cert later.
 
 ---
 
-## 🧪 Notes & Tips
+## 🛠️ Script Features
 
-- The script uses self-signed certs. LetsEncrypt support planned in a future release.
-- If your orchestrator is behind NAT, ensure ports **80** and **443** are forwarded to your internal IP.
-- Reboot after installation if services don’t appear immediately.
+The installation script:
+
+1. Generates and saves secure credentials at the beginning of installation
+2. Installs and configures K3s Kubernetes and Helm
+3. Clones the Magma repository and installs required components
+4. Sets up databases (PostgreSQL for Orchestrator, MySQL for NMS)
+5. Deploys Magma Orchestrator and NMS web interface
+6. Creates an admin user for immediate access
+7. Provides clear progress indicators at each step
+8. Saves all credentials to a secure file for future reference
 
 ---
 
-## 🛠 Troubleshooting
+## 📱 Accessing Your Installation
 
-If something goes wrong:
-- Check `kubectl get pods -A` for any pods stuck in `CrashLoopBackOff`.
-- Check logs for individual pods:
+After successful installation, you'll receive:
+- URL to access the NMS interface
+- Admin credentials for login
+- Database passwords and access information
 
+All credentials are saved to `magma-credentials.txt` in your home directory.
+
+---
+
+## ⚠️ Troubleshooting
+
+If you encounter issues during installation:
+
+1. Use the built-in troubleshooting tool:
 ```bash
-kubectl logs -n orc8r <pod-name>
+./install_magma.sh troubleshoot
 ```
 
-- Make sure your domain resolves to the server’s IP.
+2. Check pod status:
+```bash
+kubectl get pods --all-namespaces
+```
+
+3. View logs for specific pods:
+```bash
+kubectl logs -n orc8r POD_NAME
+```
+
+4. For database issues:
+```bash
+kubectl logs -n db $(kubectl get pods -n db -l app.kubernetes.io/name=postgresql -o jsonpath='{.items[0].metadata.name}')
+```
+
+5. If you need to start over:
+```bash
+./install_magma.sh cleanup
+```
+
+---
+
+## 📝 Notes & Limitations
+
+- The installation uses self-signed certificates by default
+- For a production environment, consider implementing proper TLS certificates
+- The default configuration uses a NodePort service type - configure proper ingress for production use
+- Database SSL is disabled by default for easier setup - enable it for production deployments
 
 ---
 
@@ -122,3 +147,11 @@ kubectl logs -n orc8r <pod-name>
 - **Josh Lambert**
 - [josh@lambertmail.xyz](mailto:josh@lambertmail.xyz)
 - [joshlambert.xyz](https://joshlambert.xyz)
+
+---
+
+## 🔄 Updates & Contributions
+
+This installer is actively maintained. For issues, feature requests, or contributions:
+- Open an issue on the GitHub repository
+- Submit a pull request with improvements
