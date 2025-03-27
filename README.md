@@ -119,4 +119,4 @@ kubectl logs -n orc8r <pod-name>
 
 - **Josh Lambert**
 - [josh@lambertmail.xyz](mailto:josh@lambertmail.xyz)
-- [joshlambert.xyz[
+- [joshlambert.xyz]
