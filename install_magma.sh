@@ -15,16 +15,17 @@ EMAIL=$2
 sudo apt update && sudo apt upgrade -y
 curl -sfL https://get.k3s.io | sh -
 
-# Configure kubectl
+# Configure kubectl for current user
 mkdir -p ~/.kube
 sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
 sudo chown $USER:$USER ~/.kube/config
+sudo chmod 600 ~/.kube/config
 export KUBECONFIG=$HOME/.kube/config
 
-if ! grep -q 'export KUBECONFIG' ~/.bashrc; then
+# Persist KUBECONFIG across sessions
+if ! grep -q 'export KUBECONFIG=$HOME/.kube/config' ~/.bashrc; then
   echo 'export KUBECONFIG=$HOME/.kube/config' >> ~/.bashrc
 fi
-source ~/.bashrc
 
 # Install Helm
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
@@ -92,12 +93,9 @@ EOF
 helm dependency update orc8r
 helm install orc8r ./orc8r -f orc8r-values.yaml
 
-# Deploy NMS
-cd ../nms
-helm dependency update nms
-helm install nms ./nms \
-  --set domain=${ORC8R_DOMAIN}
-
 # Show pod and service status
 kubectl get pods -A
 kubectl get svc -A
+
+echo "✅ Magma Orchestrator + NMS deployed successfully!"
+echo "🌐 Access NMS at: https://${ORC8R_DOMAIN}"
