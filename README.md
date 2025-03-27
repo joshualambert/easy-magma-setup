@@ -17,6 +17,8 @@ This repository includes a script to deploy the **Magma Orchestrator** and **NMS
 | Disk     | 50 GB SSD |
 | Network  | Public IP with ports **80** and **443** forwarded if behind NAT |
 
+This script was developed against the **AmericanCloud** webhost. You can check them out at [americancloud.com](https://americancloud.com/).
+
 ---
 
 ## 📦 Dependencies (automatically handled in the script)
@@ -119,4 +121,4 @@ kubectl logs -n orc8r <pod-name>
 
 - **Josh Lambert**
 - [josh@lambertmail.xyz](mailto:josh@lambertmail.xyz)
-- [joshlambert.xyz]
+- [joshlambert.xyz](https://joshlambert.xyz)
