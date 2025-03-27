@@ -52,7 +52,7 @@ chmod +x install-magma.sh
 4. Run the installation script:
 
 ```bash
-./install-magma.sh
+./install-magma.sh yourorchestratorurlhere.com youremailhere@fakeemail.com
 ```
 
 ---
