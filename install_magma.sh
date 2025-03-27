@@ -34,7 +34,7 @@ fi
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 # Clone Magma repo
-git clone https://github.com/magma/magma.git
+git clone --depth=1 https://github.com/magma/magma.git
 cd magma/orc8r/cloud/helm
 
 # Install cert-manager
