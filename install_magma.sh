@@ -11,9 +11,8 @@ fi
 ORC8R_DOMAIN=$1
 EMAIL=$2
 
-# System update and k3s installation
+# System update and K3s installation
 sudo apt update && sudo apt upgrade -y
-
 curl -sfL https://get.k3s.io | sh -
 
 # Configure kubectl
@@ -43,10 +42,10 @@ helm install cert-manager jetstack/cert-manager \
   --version v1.5.3 \
   --set installCRDs=true
 
-# Export variables
+# Export Helm setting
 export HELM_EXPERIMENTAL_OCI=1
 
-# Generate TLS certs
+# Generate TLS certs and Kubernetes secrets
 cd ../../tools/helm
 
 openssl req -x509 -nodes -days 365 \
@@ -70,17 +69,33 @@ kubectl -n orc8r create secret generic bootstrapper-secret \
 kubectl -n orc8r create secret generic application-secrets \
   --from-literal=app_secret="$(openssl rand -hex 32)" || true
 
-# Deploy Orchestrator
+# Go back to the orc8r helm chart folder
 cd ../../cloud/helm
+
+# PATCH deprecated API version (policy/v1beta1 → policy/v1)
+echo "Patching deprecated policy/v1beta1 to policy/v1 in Helm chart..."
+grep -rl 'policy/v1beta1' ./orc8r | xargs sed -i 's|policy/v1beta1|policy/v1|g'
+
+# Create Helm values file with required values
+cat <<EOF > orc8r-values.yaml
+domain: ${ORC8R_DOMAIN}
+proxy:
+  controller:
+    service:
+      type: NodePort
+nginx:
+  spec:
+    hostname: ${ORC8R_DOMAIN}
+EOF
+
+# Install Orchestrator using patched chart and values file
 helm dependency update orc8r
-helm install orc8r orc8r \
-  --set domain=${ORC8R_DOMAIN} \
-  --set proxy.controller.service.type=NodePort
+helm install orc8r ./orc8r -f orc8r-values.yaml
 
 # Deploy NMS
 cd ../nms
 helm dependency update nms
-helm install nms nms \
+helm install nms ./nms \
   --set domain=${ORC8R_DOMAIN}
 
 # Show pod and service status
